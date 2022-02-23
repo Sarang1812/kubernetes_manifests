@@ -1,0 +1,39 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name:  angular-svc
+spec:
+  selector:
+    app:  angular-app
+  type:  ClusterIP
+  ports:
+  - name:  name-of-the-port
+    port:  80
+    targetPort: 4200
+    protocol : TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: angular-app
+  labels: 
+    app: angular-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: angular-app
+  template:
+    metadata:
+      labels:
+        app : angular-app
+    spec:
+      containers:
+      - name: angular-app
+        image: cloudnative10/frontend:6
+        imagePullPolicy: Always
+        ports:
+        - containerPort : 4200
+          protocol: TCP    
+     
+

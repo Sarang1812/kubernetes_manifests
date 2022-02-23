@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keyclock-url
+data:
+  keyclock-url-address : "http://172.27.186.219:8005/auth/realms/BookStore/protocol/openid-connect/certs"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jaegar-url
+data:
+  jaegar-url-address : "http://172.27.186.219:8005/auth/realms/BookStore/protocol/openid-connect/certs"

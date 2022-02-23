@@ -1,0 +1,94 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: inventory-service-svc
+  labels:
+    app: inventory-service-app
+spec:
+  selector:
+    app:  inventory-service-app
+  type: ClusterIP 
+  ports:
+    - port:  80
+      targetPort:  9002
+      protocol: TCP
+
+ 
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: inventory-service-app
+  labels:
+    app: inventory-service-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: inventory-service-app
+  template:
+    metadata:
+      labels:
+        app: inventory-service-app
+    spec:
+      containers:
+      - name: inventory-service-app
+        resources:
+          requests:
+            cpu: "285m"
+            memory: "292Mi"
+          limits:
+            memory: "400Mi"
+            cpu: "1000m"
+        image: cloudnative10/inventory-service:k8s
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /stock/seller/list/9791500638824
+            port: 9002
+          initialDelaySeconds: 90
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /stock/seller/list/9791500638824
+            port: 9002
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+        ports:
+        - containerPort: 9002
+        env:
+            - name: EUREKA_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-cm
+                  key: eureka_service_address
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: url-credentials
+                  key: db-host
+            - name: DB_NAME
+              value: inventory  
+            - name: DB_USERNAME
+              valueFrom:
+               secretKeyRef:
+                  name: url-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: url-credentials
+                  key: password
+            - name: JAEGAR_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: jaegar-url
+                  key: jaegar-url-address 
+            - name: KEY_CLOCK
+              valueFrom:
+                configMapKeyRef:
+                  name: keyclock-url
+                  key: keyclock-url-address      
+            - name: REST_TEMP_BOOKCT
+              value: book-catalogue-svc
+

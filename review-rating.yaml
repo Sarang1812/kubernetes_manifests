@@ -1,0 +1,64 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name:  rating-review-svc
+spec:
+  selector:
+    app:  rating-review-app
+  type: ClusterIP
+  ports:
+   - port:  80
+     targetPort:  9003
+     protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rating-review-app
+  labels:
+    app: rating-review-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rating-review-app
+  template:
+    metadata:
+      labels:
+        app: rating-review-app
+    spec:
+      containers:
+      - name: rating-review-app
+        image: cloudnative10/rating-review-service:0
+        imagePullPolicy: Always
+        # livenessProbe:
+        #   httpGet:
+        #     path: /ratingreview/'good'
+        #     port: 9003
+        #   initialDelaySeconds: 90
+        #   timeoutSeconds: 10
+        # readinessProbe:
+        #   httpGet:
+        #     path: /ratingreview/'good'
+        #     port: 9003
+        #   initialDelaySeconds: 30
+        #   timeoutSeconds: 10
+        ports:
+        - containerPort: 9003
+        env:
+            - name: "eureka__client__serviceUrl"
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-cm
+                  key: eureka_service_address
+            - name: "eureka__client__shouldRegisterWithEureka"
+              value : 'true'  
+            - name: "eureka__client__shouldFetchRegistry"
+              value : 'false'
+            - name: "ConnectionStrings__DefaultConnections"
+              value: "server=172.27.186.214;user=root;database=ratingreviewservice;password=root;port=3308"
+            # - name: JAEGAR_URL
+            #   value: "http://172.27.186.219:14268/api/traces" 
+            - name: "Jwt__Authority"
+              value: "http://172.27.186.219:8005/auth/realms/BookStore/protocol/openid-connect/certs"     
+

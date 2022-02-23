@@ -1,0 +1,81 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name:  book-catalogue-svc
+spec:
+  selector:
+    app:  book-catalogue-app
+  type: ClusterIP
+  ports:
+   - port:  80
+     targetPort:  9001
+     protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-catalogue-app
+  labels:
+    app: book-catalogue-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: book-catalogue-app
+  template:
+    metadata:
+      labels:
+        app: book-catalogue-app
+    spec:
+      containers:
+      - name: book-catalogue-app
+        image: cloudnative10/book-catalogue:k8s
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /book/listRandom
+            port: 9001
+          initialDelaySeconds: 90
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /book/listRandom
+            port: 9001
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+        ports:
+        - containerPort: 9001
+        env:
+            - name: EUREKA_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-cm
+                  key: eureka_service_address
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: url-credentials
+                  key: db-host
+            - name: DB_NAME
+              value: superbooks  
+            - name: DB_USERNAME
+              valueFrom:
+               secretKeyRef:
+                  name: url-credentials
+                  key: username
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: url-credentials
+                  key: password
+            - name: JAEGAR_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: jaegar-url
+                  key: jaegar-url-address 
+            - name: KEY_CLOCK
+              valueFrom:
+                configMapKeyRef:
+                  name: keyclock-url
+                  key: keyclock-url-address    
+

@@ -1,0 +1,71 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name:  order-svc
+spec:
+  selector:
+    app:  order-app
+  type: ClusterIP
+  ports:
+   - port:  80
+     targetPort:  5000
+     protocol: TCP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order-app
+  labels:
+    app: order-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order-app
+  template:
+    metadata:
+      labels:
+        app: order-app
+    spec:
+      containers:
+      - name: order-app
+        image: cloudnative10/order-service:0
+        imagePullPolicy: Always
+        livenessProbe:
+          httpGet:
+            path: /api/orders/count
+            port: 5000
+          initialDelaySeconds: 90
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/orders/count
+            port: 5000
+          initialDelaySeconds: 30
+          timeoutSeconds: 10
+    
+        ports:
+        - containerPort: 5000
+        env:
+            - name: "eureka__client__serviceUrl"
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-cm
+                  key: eureka_service_address
+            - name: "eureka__client__shouldRegisterWithEureka"
+              value : 'true'  
+            - name: "eureka__client__shouldFetchRegistry"
+              value : 'false'
+            - name: "ConnectionStrings__DefaultConnections"
+              value: "server=172.27.186.214;user=root;database=orderservice;password=root;port=3308"
+            #  - name: JAEGAR_URL
+            #     valueFrom:
+            #       configMapKeyRef:
+            #         name: jaegar-url
+            #         key: jaegar-url-address  
+            - name: "Jwt__Authority"
+              valueFrom:
+                configMapKeyRef:
+                  name: keyclock-url
+                  key: keyclock-url-address      
+

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cloud-gateway-app
+  labels:
+    app: cloud-gateway-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cloud-gateway-app
+  template:
+    metadata:
+      labels:
+        app: cloud-gateway-app
+    spec:
+      containers:
+        - name: cloud-gateway-app
+          image: sarang18/api-gateway:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 9000
+          env:
+            - name: EUREKA_SERVER_ADDRESS
+              valueFrom:
+                configMapKeyRef:
+                  name: eureka-cm
+                  key: eureka_service_address
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cloud-gateway-svc
+spec:
+  selector:
+    app: cloud-gateway-app
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: 9000
+      protocol: TCP
+---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: cloud-gateway-svc
+#   labels:
+#     app: cloud-gateway-app
+# spec:
+#   ports:
+#   - port: 80
+#     targetPort: 9000
+#     protocol: TCP
+#   selector:
+#     app: cloud-gateway-app
+#   clusterIP: None
+
